@@ -1,16 +1,712 @@
+:root {
+  --bg: #0b1220;
+  --panel: #131b2e;
+  --line: #263351;
+  --text: #e8e2d0;
+  --dim: #8a97b8;
+  --accent: #ffd23f;
+  --anomaly: #ff5d5d;
+  --hit: #63e6a3;
+  --sky-top: #1b2a4a;
+  --sky-mid: #6b3f8f;
+  --sky-bottom: #ff9d5c;
+}
+
 body {
   margin: 0;
-  padding: 2rem;
-  font-family: system-ui, sans-serif;
+  padding: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   line-height: 1.6;
-  color: #1a1a1a;
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
 }
 
 main {
-  max-width: 40rem;
+  max-width: 48rem;
   margin: 0 auto;
+  padding: 1.5rem;
+}
+
+header {
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+/* In-game: the scene takes the whole browser window, not a small centered
+   card — the chrome around it gets out of the way entirely. */
+
+body.in-game {
+  overflow: hidden;
+}
+
+body.in-game header {
+  display: none;
+}
+
+body.in-game main {
+  max-width: none;
+  margin: 0;
+  padding: 0;
 }
 
 a {
-  color: #0b5fff;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  min-height: 60vh;
+  text-align: center;
+}
+
+.run-button,
+.restart-button {
+  font-family: inherit;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.9rem 1.8rem;
+  background: var(--panel);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  cursor: pointer;
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+
+.run-button:hover,
+.restart-button:hover {
+  background: #1c2740;
+}
+
+.hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin: 0;
+  padding: 1.1rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-shadow: 0 0 10px rgba(255, 210, 63, 0.45);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6), transparent);
+  box-sizing: border-box;
+}
+
+.screen-playing,
+.screen-playing .tile {
+  cursor: none;
+}
+
+/* The playing screen and the scene fill the whole viewport — a real
+   fullscreen game view, not a small card floating in a page. */
+
+.screen-playing {
+  position: fixed;
+  inset: 0;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+.screen-ended {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  z-index: 20;
+}
+
+/* Scene: the crowd sits in a scattered, jittered layout across a dusk
+   skyline, not a card grid. */
+
+.scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  transition: background-color 0.15s;
+}
+
+.scene-sky {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(1px 1px at 12% 14%, #fff, transparent),
+    radial-gradient(1px 1px at 26% 8%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 41% 18%, #fff, transparent),
+    radial-gradient(1px 1px at 58% 6%, #fff, transparent),
+    radial-gradient(1px 1px at 73% 15%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 88% 10%, #fff, transparent),
+    radial-gradient(1px 1px at 95% 22%, #fff, transparent),
+    radial-gradient(ellipse 40% 30% at 78% 12%, rgba(255, 200, 130, 0.55), transparent 70%),
+    linear-gradient(
+      to bottom,
+      var(--sky-top) 0%,
+      var(--sky-mid) 42%,
+      var(--sky-bottom) 78%,
+      #2a1a12 100%
+    );
+  background-repeat: no-repeat;
+}
+
+.scene-skyline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 8%;
+}
+
+.scene-skyline-far {
+  height: 42%;
+  bottom: 16%;
+  background: #2a2044;
+  opacity: 0.55;
+  clip-path: polygon(
+    0 100%, 0 55%, 6% 55%, 6% 35%, 14% 35%, 14% 50%, 22% 50%, 22% 25%,
+    30% 25%, 30% 45%, 40% 45%, 40% 15%, 50% 15%, 50% 40%, 60% 40%, 60% 30%,
+    70% 30%, 70% 50%, 80% 50%, 80% 20%, 90% 20%, 90% 45%, 100% 45%, 100% 100%
+  );
+}
+
+.scene-skyline-near {
+  height: 34%;
+  background: #150f24;
+  opacity: 0.85;
+  clip-path: polygon(
+    0 100%, 0 60%, 8% 60%, 8% 35%, 16% 35%, 16% 55%, 26% 55%, 26% 25%,
+    36% 25%, 36% 50%, 46% 50%, 46% 30%, 58% 30%, 58% 58%, 68% 58%, 68% 20%,
+    78% 20%, 78% 45%, 90% 45%, 90% 32%, 100% 32%, 100% 100%
+  );
+}
+
+.scene-rooftop {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 9%;
+  background: linear-gradient(to bottom, #0c0a12, #000);
+}
+
+.scene-people {
+  position: absolute;
+  inset: 0;
+}
+
+.tile {
+  --tile-w: clamp(44px, 5.5vw, 88px);
+  --tile-h: clamp(70px, 8.8vw, 140px);
+  position: absolute;
+  width: var(--tile-w);
+  height: var(--tile-h);
+  margin: calc(var(--tile-h) * -1) 0 0 calc(var(--tile-w) * -0.5);
+  display: flex;
+  overflow: visible;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+}
+
+.tile-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  transform: scale(var(--depth-scale, 1));
+  transform-origin: bottom center;
+  filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.4));
+}
+
+.person-figure {
+  width: calc(var(--tile-w) * 0.727);
+  height: calc(var(--tile-h) * 0.729);
+}
+
+.tile-name {
+  font-size: clamp(0.5rem, 0.85vw, 0.75rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 0.05rem 0.3rem;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+.tile-anomaly .person-figure {
+  animation: flicker 2.6s ease-in-out infinite;
+}
+
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.86;
+  }
+}
+
+.tile-hit .tile-visual {
+  animation: shatter 0.3s ease-out forwards;
+}
+
+.tile-miss .person-figure {
+  outline: 2px solid var(--anomaly);
+  outline-offset: 2px;
+}
+
+.tile-expired .tile-visual {
+  opacity: 0.4;
+  filter: grayscale(1);
+}
+
+@keyframes shatter {
+  0% {
+    transform: scale(1);
+  }
+  60% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(0.85);
+    opacity: 0.4;
+  }
+}
+
+.bullet-decal {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #000 0%, #000 40%, transparent 70%);
+  box-shadow: 0 0 4px 2px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
+.flash-hit {
+  background-color: rgba(99, 230, 163, 0.18);
+}
+
+.flash-miss {
+  background-color: rgba(255, 93, 93, 0.14);
+}
+
+.severity-low.flash-hit,
+.severity-low.flash-miss {
+  box-shadow: inset 0 0 0 4px rgba(120, 190, 120, 0.55);
+}
+
+.severity-moderate.flash-hit,
+.severity-moderate.flash-miss {
+  box-shadow: inset 0 0 0 4px rgba(255, 190, 80, 0.65);
+}
+
+.severity-high.flash-hit,
+.severity-high.flash-miss {
+  box-shadow: inset 0 0 0 4px rgba(255, 77, 77, 0.9);
+}
+
+/* Scope framing: a static overlay so the whole scene reads as viewed down
+   a rifle scope, distinct from the pointer-following reticle below. */
+
+.scope-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 46%,
+    rgba(0, 0, 0, 0.35) 66%,
+    rgba(0, 0, 0, 0.94) 100%
+  );
+}
+
+.scope-vignette::before {
+  content: "";
+  position: absolute;
+  inset: 6%;
+  border: 1px solid rgba(255, 210, 63, 0.18);
+  border-radius: 50%;
+}
+
+.scope-vignette::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 3%;
+  right: 3%;
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    rgba(255, 210, 63, 0.35) 0 2px,
+    transparent 2px 5%
+  );
+}
+
+/* Reticle */
+
+.reticle {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 50;
+  transform: translate(-50%, -50%);
+}
+
+.reticle-inner {
+  animation: breathe 2.8s ease-in-out infinite;
+}
+
+.reticle-inner.kick {
+  animation: none;
+  transform: scale(0.85);
+}
+
+.reticle-svg {
+  width: 40px;
+  height: 40px;
+  overflow: visible;
+}
+
+.reticle-svg line {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+}
+
+.reticle-dot {
+  fill: var(--accent);
+}
+
+.timer-ring-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.15);
+  stroke-width: 2;
+}
+
+.timer-ring-fg {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  transform: rotate(-90deg);
+  transform-origin: 20px 20px;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+#play-area.recoil {
+  transform: translate(2px, 1px);
+}
+
+.muzzle-flash {
+  position: fixed;
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 210, 120, 0.7) 35%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 60;
+  animation: muzzle 0.22s ease-out forwards;
+}
+
+@keyframes muzzle {
+  0% {
+    opacity: 1;
+    transform: scale(0.4);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+.screen-ended {
+  gap: 0.75rem;
+}
+
+.ending-message {
+  font-size: 1.4rem;
+}
+
+.ending-score {
+  color: var(--dim);
+}
+
+.ending-high .ending-message {
+  color: var(--anomaly);
+}
+
+.nuke-aftermath,
+.nuke-static {
+  padding: 2rem;
+  background: radial-gradient(ellipse at center, #1a0000 0%, #000 100%);
+}
+
+.nuke-aftermath {
+  animation: fade-in 0.6s ease-in;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.crash-shake {
+  animation: shake 0.6s ease-in-out;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  20% {
+    transform: translate(-6px, 3px);
+  }
+  40% {
+    transform: translate(6px, -3px);
+  }
+  60% {
+    transform: translate(-4px, 2px);
+  }
+  80% {
+    transform: translate(4px, -2px);
+  }
+}
+
+/* Nuke sequence (high-severity ending only) */
+
+.char-fall {
+  animation: char-fall 0.9s ease-in forwards;
+  animation-delay: var(--char-delay, 0ms);
+}
+
+@keyframes char-fall {
+  0% {
+    filter: none;
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  40% {
+    filter: sepia(1) saturate(3) hue-rotate(-30deg) brightness(0.6);
+  }
+  100% {
+    filter: brightness(0.1);
+    transform: translateY(30px) rotate(8deg);
+    opacity: 0;
+  }
+}
+
+.nuke-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.nuke-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff6d0;
+  animation: nuke-flash 0.4s ease-out forwards;
+}
+
+@keyframes nuke-flash {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.nuke-cloud {
+  position: absolute;
+  left: 50%;
+  bottom: -20%;
+  border-radius: 50%;
+  filter: blur(18px);
+  opacity: 0;
+  animation: nuke-rise 1.6s ease-out forwards;
+}
+
+.nuke-cloud-1 {
+  width: 220px;
+  height: 220px;
+  margin-left: -110px;
+  background: radial-gradient(circle, #ffae42, #7a2b00);
+  animation-delay: 0.2s;
+}
+
+.nuke-cloud-2 {
+  width: 300px;
+  height: 300px;
+  margin-left: -150px;
+  background: radial-gradient(circle, #ffdca0, #4a1a00);
+  animation-delay: 0.45s;
+}
+
+.nuke-cloud-3 {
+  width: 160px;
+  height: 420px;
+  margin-left: -80px;
+  bottom: -30%;
+  background: radial-gradient(circle, #d9d9d9, #333);
+  animation-delay: 0.1s;
+}
+
+@keyframes nuke-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.6);
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0.85;
+    transform: translateY(-260px) scale(1.15);
+  }
+}
+
+.nuke-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(120, 0, 0, 0.55) 100%);
+  animation: nuke-vignette 2s ease-in forwards;
+  opacity: 0;
+}
+
+@keyframes nuke-vignette {
+  0%,
+  40% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.crash-shake-hard {
+  animation: shake-hard 2s ease-in-out;
+}
+
+@keyframes shake-hard {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  10% {
+    transform: translate(-10px, 6px);
+  }
+  20% {
+    transform: translate(10px, -6px);
+  }
+  30% {
+    transform: translate(-14px, 8px);
+  }
+  40% {
+    transform: translate(14px, -8px);
+  }
+  50% {
+    transform: translate(-10px, 5px);
+  }
+  60% {
+    transform: translate(10px, -5px);
+  }
+  70% {
+    transform: translate(-6px, 3px);
+  }
+  80% {
+    transform: translate(6px, -3px);
+  }
+  90% {
+    transform: translate(-3px, 2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reticle-inner {
+    animation: none;
+  }
+
+  .tile-anomaly .person-figure {
+    animation: none;
+    outline: 1px dashed var(--dim);
+  }
+
+  .tile-hit .tile-visual {
+    animation: none;
+  }
+
+  .char-fall {
+    animation: none;
+  }
+
+  .crash-shake,
+  .crash-shake-hard {
+    animation: none;
+  }
+
+  .nuke-flash,
+  .nuke-cloud,
+  .nuke-vignette {
+    animation: none;
+    display: none;
+  }
+
+  .nuke-aftermath {
+    animation: none;
+  }
 }
