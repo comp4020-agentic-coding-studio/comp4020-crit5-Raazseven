@@ -1,70 +1,62 @@
 # Process overview
 
-<!-- TEMPLATE: this file is a shape to fill in, not a form. Replace everything
-     in it with your own overview, and delete this comment — `pnpm
-     check:evidence` will remind you if it's still here. -->
-
 A reading-guide to how the work came together --- a map to your process, not an
-essay about it. Markers read this file and follow its citations; they don't
-trawl the repo for evidence you didn't point at, so if a moment mattered, cite
-it.
-
-This file is the shape; the course site's
-[assessment page](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#what-you-submit)
-is the requirement, and its
-[word counts](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#word-counts)
-cover every deliverable.
+essay about it.
 
 ## What I built
 
-One paragraph: the thing, and the idea behind it.
+A "Where's Waldo" sniper game: a scattered dusk-lit crowd of developer/deploy
+personas (Backend Engineer, Security, Docs Writer, ...) fills the screen, one
+of them is the anomaly hiding in a cluster of its own lookalikes, and the
+player has to spot and click it before the timer runs out. Each anomaly's
+severity (low/moderate/high) is shown at a glance via a colored torso outline,
+but the round is timed and mistakes are budgeted per severity, so spotting
+fast and correctly still matters. Missing badly enough on a `high`-severity
+anomaly ends the run in a nuke sequence; enough clean hits wins it.
 
 ## The moments that mattered
 
-Three or four for an assignment; fewer is fine for a weekly prototype. Keep the
-list short so each moment has room to do all four jobs:
+1. **Sniper-scene reskin, not a card grid.** The brief's early feedback was
+   blunt: a flat grid of file-icon cards "looks so bad", and the ask was for
+   "a real sniper game like Sniper 3D" where the anomaly is a person in a
+   crowd. Instead of just changing the icons, I rebuilt the round data around
+   roles/uniforms and the layout around a jittered, depth-scaled scattered
+   placement (`computeLayout`) behind a skyline/scope-vignette backdrop, so
+   the anomaly hides inside a genuine cluster of its own lookalikes rather
+   than being shuffled anywhere on a grid. I checked it by screenshotting the
+   live scene with Playwright and confirming the cluster read as a crowd, not
+   a lineup, before moving on.
+   [`ed4e1a4`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-Raazseven/commit/ed4e1a4)
 
-1. **what happened** --- the problem, or the thing that went wrong
-2. **what you did instead of the obvious thing** --- the call you made, and why
-   it beat the obvious one
-3. **how you knew it was right** --- the check you ran, the viewport you looked
-   at, what you read before accepting the diff
-4. **the citation** --- a commit or commit range, a `CLAUDE.md` change, a check
-   that went from red to green, a prompt paired with the commit it produced
+2. **A caught contrast bug, generalized past the roles in play.** While
+   reviewing the severity-outline mechanic, a real question came up: some
+   role shirts (`build`'s gold, `legal`'s gold, `release`'s orange) sit close
+   enough to the low/moderate outline colors that the outline could blend
+   into the shirt. Rather than just checking the roles currently used by the
+   9 anomaly definitions, I fixed it structurally with a dark halo drawn
+   behind every colored outline, and wrote a test that iterates all 14 roles
+   x 3 severities so the fix holds even if the anomaly roster changes later.
+   [`773fd63`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-Raazseven/commit/773fd63)
 
-Jobs 2 and 3 are the ones the repo can't tell a reader on its own, so they're
-where the marks are. The strongest moments are the ones where a correction
-landed in the **harness** --- the standards and checks your work has to satisfy
---- rather than in a retry: a rule added to `CLAUDE.md`, a check wired up, an
-attempt thrown away. Retrying until it passes is the routine case, and changing
-what the work runs against is the skilled one.
+   > but are there dress and the oultine same colour if so they wont be
+   > visible
 
-Cite each moment as a link whose text is the commit hash or range and whose
-target is this repo's commit or compare URL, so a reader clicks straight to the
-evidence:
+3. **A silent mechanic made legible, and a real update-timing bug caught
+   along the way.** A question about why a wrong click doesn't always end
+   the game surfaced that `MISTAKE_LIMIT` (a per-severity forgiveness budget)
+   was invisible in the HUD. Adding the readout, I found the obvious call
+   site (`updateHud()`, called after `activeAnomaly` is nulled in
+   `resolveRound`) would silently no-op and leave the counter stale until the
+   next round started. I reworked `updateMistakesHud` to take an explicit
+   severity argument instead of reading module state, then verified with a
+   Playwright script that clicked a decoy and confirmed the counter updated
+   immediately (`0/3` -> `1/3`) rather than after the pause.
+   [`ab5d186`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-Raazseven/commit/ab5d186)
 
-- one commit: [`a1b2c3d`](https://github.com/YOUR-ORG/YOUR-REPO/commit/a1b2c3d)
-- a range:
-  [`a1b2c3d...e4f5a6b`](https://github.com/YOUR-ORG/YOUR-REPO/compare/a1b2c3d...e4f5a6b)
+## Checks that carried over
 
-To pair a prompt with the commit it produced, quote the prompt (curated, not a
-full transcript) next to the citation:
-
-> the prompt, verbatim
-
-Screenshots are welcome where one carries the verification better than a
-sentence does. Commit the file to this repo and link it with a **relative**
-path, which is what makes it render on GitHub: `![alt text](docs/before.png)`.
-Images don't count towards the word count and don't replace the citation.
-
-## Before you ship
-
-`pnpm check:evidence` verifies your citations resolve to real commits, that a
-reflection entry the marker reads is in `reflections/`, and that your
-`CLAUDE.md` is there --- before a marker ever opens the file. It checks that
-your map is traceable, not that it is good: the marker judges whether your
-small, deliberately chosen set of moments shows real judgement and reflection. A
-green check is not a substitute for that curation.
-
-Images aren't checked: unlike a citation whose SHA doesn't resolve, a broken
-image is visible the moment this file is rendered on GitHub.
+`spec/crit-5.test.ts` and `spec/tells.test.ts` assert the mistake-budget/win
+rules and the outline/halo contract directly against `game.ts` and
+`people.ts`, so a future change to pacing or the role roster gets caught
+immediately rather than only at the crit.
+[`b57fbde`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-Raazseven/commit/b57fbde)
