@@ -79,6 +79,12 @@ export function personSvg(role: string, opts: PersonOpts = {}): string {
   const torsoOutline = opts.outlineSeverity
     ? ` stroke="${OUTLINE_COLOR[opts.outlineSeverity]}" stroke-width="2"`
     : "";
+  // A dark halo sits behind the colored outline so it reads clearly even
+  // against a shirt whose color is itself close to yellow/orange/red (e.g.
+  // build's gold or release's orange) — contrast is never left to chance.
+  const torsoHalo = opts.outlineSeverity
+    ? `<rect x="9" y="21" width="22" height="24" rx="7" fill="none" stroke="#000" stroke-width="5" opacity="0.6" />`
+    : "";
   return `
     <svg class="person-figure" viewBox="0 0 40 64" aria-hidden="true">
       <ellipse class="person-shadow" cx="20" cy="61" rx="13" ry="2.5" fill="#000" opacity="0.35" />
@@ -87,6 +93,7 @@ export function personSvg(role: string, opts: PersonOpts = {}): string {
       <g${shirtFilter}>
         <rect class="person-arm" x="${5 - armLean}" y="24" width="6" height="17" rx="3" fill="${type.shirt}" />
         <rect class="person-arm" x="${29 + armLean}" y="24" width="6" height="17" rx="3" fill="${type.shirt}" />
+        ${torsoHalo}
         <rect class="person-torso" x="9" y="21" width="22" height="24" rx="7" fill="${type.shirt}"${torsoOutline} />
       </g>
       <circle class="person-head" cx="20" cy="13" r="8.5" fill="${type.skin}" />

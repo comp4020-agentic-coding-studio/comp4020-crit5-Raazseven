@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeAll, describe, expect, it } from "vitest";
-import { personSvg, OUTLINE_COLOR } from "../src/scripts/people.ts";
+import { personSvg, OUTLINE_COLOR, ROLE_KEYS } from "../src/scripts/people.ts";
 
 // Locks in two things a player should always be able to rely on: every
 // anomaly gets an outline (never silently dropped for a given tell type),
@@ -65,5 +65,28 @@ describe("anomaly outline: colored by severity", () => {
   it("no outline is drawn when outlineSeverity is omitted", () => {
     const svg = personSvg("docs", {});
     expect(svg).not.toContain("stroke=");
+  });
+});
+
+describe("anomaly outline: visible against every shirt color", () => {
+  // Some roles' shirts are themselves gold/orange (build, legal, release) —
+  // close enough to the low/moderate outline colors that a bare colored
+  // stroke could blend into the fill. A dark halo behind the colored stroke
+  // guarantees contrast no matter which role wears it.
+  it("draws a dark halo behind the colored outline, for every role", () => {
+    for (const role of ROLE_KEYS) {
+      for (const severity of ["low", "moderate", "high"] as const) {
+        const svg = personSvg(role, { outlineSeverity: severity });
+        expect(svg).toContain('stroke="#000"');
+        expect(svg).toContain(`stroke="${OUTLINE_COLOR[severity]}"`);
+      }
+    }
+  });
+
+  it("has no halo when there is no outline", () => {
+    for (const role of ROLE_KEYS) {
+      const svg = personSvg(role, {});
+      expect(svg).not.toContain('stroke="#000"');
+    }
   });
 });
