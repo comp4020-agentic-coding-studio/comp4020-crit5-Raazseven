@@ -6,11 +6,12 @@ import {
   registerMistake,
   windowDurationForLevel,
   pauseDurationForLevel,
+  MISTAKE_LIMIT,
   type Ending,
   type GameState,
   type Severity,
 } from "./game.ts";
-import { personSvg, CODENAME_POOL, ROLE_TYPES, ROLE_KEYS } from "./people.ts";
+import { personSvg, CODENAME_POOL, ROLE_TYPES, ROLE_KEYS, OUTLINE_COLOR } from "./people.ts";
 
 const GRID_SIZE = 16;
 const GRID_COLS = 4;
@@ -358,6 +359,7 @@ function startGame(): void {
     <div class="screen screen-playing" id="play-area">
       <div class="hud">
         <span class="hud-sniped">${state.sniped}</span>
+        <span class="hud-mistakes"></span>
         <span class="hud-level">L${state.level}</span>
       </div>
       <div class="scene" id="scene">
@@ -423,6 +425,20 @@ function renderGrid(tiles: TileSpec[]): void {
   });
 }
 
+// Shows the mistake budget for a given severity — how many wrong
+// clicks/expiries that tier forgives before its ending fires. The severity
+// is already visible via the outline color, so surfacing the budget here
+// isn't a new leak; it just makes the forgiveness rule legible instead of a
+// wrong click silently doing nothing until the limit lands.
+function updateMistakesHud(severity: Severity): void {
+  const el = document.querySelector<HTMLSpanElement>(".hud-mistakes");
+  if (!el) return;
+  const used = state.mistakes[severity];
+  const limit = MISTAKE_LIMIT[severity];
+  el.textContent = `${severity.toUpperCase()} MISTAKES ${used}/${limit}`;
+  el.style.color = OUTLINE_COLOR[severity];
+}
+
 function updateHud(): void {
   const sniped = document.querySelector(".hud-sniped");
   const level = document.querySelector(".hud-level");
@@ -443,6 +459,7 @@ function nextRound(): void {
   const round = buildRound(activeAnomaly);
   activeTileIndex = round.index;
   renderGrid(round.tiles);
+  updateMistakesHud(activeAnomaly.severity);
   clearTimeout(roundTimer);
   const duration = windowDurationForLevel(state.level);
   startTimerRing(duration);
@@ -477,6 +494,7 @@ function resolveRound(hit: boolean): void {
   }
 
   updateHud();
+  updateMistakesHud(severity);
   roundTimer = setTimeout(nextRound, pauseDurationForLevel(state.level));
 }
 
